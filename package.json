@@ -1,0 +1,23 @@
+{
+  "name": "upload",
+  "version": "1.0.0",
+  "description": "Node express server for uploading measurement data to ballometer.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wipfli/upload.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wipfli/upload/issues"
+  },
+  "homepage": "https://github.com/wipfli/upload#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-jwt": "^6.0.0"
+  }
+}
