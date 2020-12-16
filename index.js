@@ -1,5 +1,11 @@
 const express = require('express')
 const jwt = require('express-jwt')
+const Influx = require('influx')
+
+const influx = new Influx.InfluxDB({
+    database: 'ballometer',
+    host: 'localhost'
+})
 
 const app = express()
 app.use(express.json())
@@ -39,15 +45,15 @@ const savePoint = (point, username) => {
     const key = allowedKeys.find(key => key in point)
 
     if (key === undefined) {
-        return false
+        return Promise.reject('key not found in allowed keys')
     }
 
     if (!('time' in point)) {
-        return false
+        return Promise.reject('time not found')
     }
 
     if (!('flight_id' in point)) {
-        return false
+        return Promise.reject('flight_id not found')
     }
 
     const influxPoint = {
@@ -59,24 +65,22 @@ const savePoint = (point, username) => {
             username: username,
             flight_id: parseFloat(point.flight_id)
         },
-        time: point.time
+        timestamp: parseFloat(point.time) * 1e9
     }
 
-    console.log(influxPoint)
-
-    return true
+    return influx.writePoints([influxPoint])
 }
 
 // Assumes a payload of the form
 //
 // [
 //     {
-//         time: 'iso format string',
+//         time: 1605120075.645165,
 //         sht_temperature: 304.5,
 //         flight_id: 1
 //     },
 //     {
-//         time: 'iso format string',
+//         time: 1605120077.493095,
 //         sht_humidity: 43.3,
 //         flight_id: 1
 //     },
@@ -93,17 +97,17 @@ app.post('/:username', jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256
         return res.sendStatus(400)
     }
 
-    const successes = req.body.map(point => savePoint(point, req.params.username))
+    const promises = req.body.map(point => savePoint(point, req.params.username))
 
-    if (successes.includes(false)) {
-        return res.status(200).send('Some points failed')
-    }
-    else {
+    Promise.all(promises).then(values => {
         return res.sendStatus(200)
-    }
+    }).catch(error => {
+        return res.status(400).send(String(error))
+    })
 })
 
 app.use((err, req, res, next) => {
+    console.log(err)
     if (err.name === 'UnauthorizedError') {
         return res.sendStatus(403)
     }
