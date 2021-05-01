@@ -16,6 +16,7 @@ Environment=JWT_SECRET="your-secret"
 ExecStart=node index.js
 Restart=always
 TimeoutStopSec=30
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
