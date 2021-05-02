@@ -97,6 +97,11 @@ app.post('/:username', jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256
         return res.sendStatus(400)
     }
 
+    const max_length = 5000
+    if (req.body.length > max_length) {
+        return res.status(400).send(`Exceeded maximum body lenght of ${max_length}.`)
+    }
+
     const influxPoints = req.body.map(point => preparePoint(point, req.params.username))
 
     influx.writePoints(influxPoints)
