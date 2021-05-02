@@ -40,7 +40,7 @@ const allowedKeys = [
     'qnh'
 ]
 
-const savePoint = (point, username) => {
+const preparePoint = (point, username) => {
 
     const key = allowedKeys.find(key => key in point)
 
@@ -68,7 +68,7 @@ const savePoint = (point, username) => {
         timestamp: parseFloat(point.time) * 1e9
     }
 
-    return influx.writePoints([influxPoint])
+    return influxPoint
 }
 
 // Assumes a payload of the form
@@ -97,13 +97,15 @@ app.post('/:username', jwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256
         return res.sendStatus(400)
     }
 
-    const promises = req.body.map(point => savePoint(point, req.params.username))
+    const influxPoints = req.body.map(point => preparePoint(point, req.params.username))
 
-    Promise.all(promises).then(values => {
-        return res.sendStatus(200)
-    }).catch(error => {
-        return res.status(400).send(String(error))
-    })
+    influx.writePoints(influxPoints)
+        .then(values => {
+            return res.sendStatus(200)
+        })
+        .catch(error => {
+            return res.status(400).send(String(error))
+        })
 })
 
 app.use((err, req, res, next) => {
