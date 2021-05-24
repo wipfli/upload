@@ -1,5 +1,6 @@
-# upload
-Node express server for uploading measurement data to ballometer.io
+# api-write
+
+Node express server for writing measurement data to a ballometer server
 
 ## Installation
 
